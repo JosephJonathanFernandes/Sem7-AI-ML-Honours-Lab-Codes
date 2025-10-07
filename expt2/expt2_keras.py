@@ -1,31 +1,41 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense, Input
+import tensorflow as tf
+
+# Make runs deterministic for debugging (reproducible weights/outputs)
+np.random.seed(0)
+tf.random.set_seed(0)
 
 # Function to build, train, and return a simple ANN for a logic gate
 def train_gate(X, y, gate_name):
     print(f"\nTraining {gate_name} Gate")
-    
+
     # Define the model
     model = Sequential()
-    model.add(Dense(4, input_dim=X.shape[1], activation='sigmoid'))  # hidden layer
+    model.add(Input(shape=(X.shape[1],))) # Use Input layer
+    model.add(Dense(4, activation='sigmoid'))  # hidden layer
     model.add(Dense(1, activation='sigmoid'))  # output layer
+
 
     # Compile the model
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
     # Train the model
-    model.fit(X, y, epochs=500, verbose=0)
+    model.fit(X, y, epochs=2000, verbose=0)
 
     # Evaluate
     _, accuracy = model.evaluate(X, y, verbose=0)
     print(f"{gate_name} Gate Accuracy: {accuracy*100:.2f}%")
 
     # Predictions
-    predictions = (model.predict(X) > 0.5).astype("int32")
-    print(f"Inputs:\n{X}\nPredictions:\n{predictions}\nExpected:\n{y}\n")
-    
+    # Predictions and raw probabilities
+    probs = model.predict(X)
+    predictions = (probs > 0.5).astype("int32")
+    accuracy = np.mean(predictions == y) * 100.0
+    print(f"Inputs:\n{X}\nRaw probabilities:\n{probs.flatten()}\nPredictions:\n{predictions.flatten()}\nExpected:\n{y.flatten()}\n{gate_name} Gate Accuracy (manual): {accuracy:.2f}%\n")
+
     return model
 
 # Function to visualize 2-input logic gates or single-input NOT gate
@@ -36,12 +46,12 @@ def plot_gate(X, y, model, gate_name):
         y_min, y_max = X[:,1].min() - 0.5, X[:,1].max() + 0.5
         xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.01),
                              np.arange(y_min, y_max, 0.01))
-        
+
         # Predict on grid
         grid_points = np.c_[xx.ravel(), yy.ravel()]
         Z = (model.predict(grid_points) > 0.5).astype(int)
         Z = Z.reshape(xx.shape)
-        
+
         # Plot decision boundary
         plt.contourf(xx, yy, Z, alpha=0.4, cmap=plt.cm.RdYlBu)
         plt.scatter(X[:,0], X[:,1], c=y[:,0], s=100, edgecolors='k', cmap=plt.cm.RdYlBu)

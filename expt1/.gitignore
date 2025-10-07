@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+.venv/
+env/
+venv/
+
+# Data and checkpoints
+data/
+checkpoints/
+
+# IDE/editor
+.vscode/
+*.swp
+
+# numpy/torch cache
+*.npy
+
+# Logs
+*.log
+
+# Windows
+Thumbs.db
+.DS_Store
